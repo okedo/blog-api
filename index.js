@@ -6,11 +6,28 @@ const jsonParser = bodyParser.json();
 
 const app = express();
 const mongoClient = require("mongodb").MongoClient;
-const dbURI = "mongodb://admin:Update01@ds125381.mlab.com:25381/blogdb";
-// const dbURI = "mongodb://localhost:27017/";
+// const dbURI = "mongodb://admin:Update01@ds125381.mlab.com:25381/blogdb";
+const dbURI = "mongodb://localhost:27017/";
 // const dbURI = "mongodb://okedo:<Update01>@blogdb-shard-00-00-jifjv.mongodb.net:27017,blogdb-shard-00-01-jifjv.mongodb.net:27017,blogdb-shard-00-02-jifjv.mongodb.net:27017/test?ssl=true&replicaSet=BlogDB-shard-0&authSource=admin&retryWrites=true";
 // const dbURI = "mongodb://okedo:Update01@blogdb-shard-00-00-jifjv.mongodb.net:27017";
 // const dbURI = "mongodb+srv://okedo:<Update01>@blogdb-jifjv.mongodb.net/blogDb";
+
+  
+const url = "mongodb://localhost:27017/";
+ 
+let users = [{name: "Bob", age: 34} , {name: "Alice", age: 21}, {name: "Tom", age: 45}];
+ 
+mongoClient.connect(url, function(err, client){
+      
+    const db = client.db("usersdb");
+    const collection = db.collection("users");
+     
+    collection.find(users, function(err, results){
+              
+        console.log(results);
+        client.close();
+    });
+});
 
 app.get("/main", function (request, response) {
   mongoClient.connect(
