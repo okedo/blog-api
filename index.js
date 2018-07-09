@@ -16,7 +16,7 @@ app.get("/main", function (req, res) {
 
   mongoClient.connect(dbURI, function (err, client) {
     client.db("blogdb").collection("mainPage").find({}).toArray(function (err, mainPageData) {
-      res.send(mainPageData)
+      res.send(mainPageData[0])
       client.close();
     });
   });
@@ -25,8 +25,8 @@ app.get("/main", function (req, res) {
 app.get("/articles", function (request, response) {
   mongoClient.connect(
     dbURI, { useNewUrlParser: true }, function (err, client) {
-      client.db("blogdb").collection("mainPage").find({}).toArray(function (err, mainPageData) {
-        response.send(mainPageData)
+      client.db("blogdb").collection("articles").find({}).toArray(function (err, data) {
+        response.send(data);
         client.close();
       });
     });
@@ -39,7 +39,7 @@ app.post("/article/new", jsonParser, function (request, response) {
     return response.sendStatus(400);
   }
   else if (!request.body.title && !request.body.text) {
-    return response.sendStatus(500);
+    return response.sendStatus(400);
   };
   const article = { title: request.body.title, text: request.body.text }
 
@@ -48,7 +48,8 @@ app.post("/article/new", jsonParser, function (request, response) {
     function (err, client) {
       client.db("blogdb").collection("articles").insertOne(article, function (err, result) {
         if (err) return response.status(400).send();
-        response.send(article);
+        console.log(article);
+        response.send(JSON.stringify(article));
         client.close();
       });
     });
@@ -70,7 +71,7 @@ app.post("/logon", jsonParser, function (request, response) {
       client.db("blogdb").collection("users").find({login:credentials.login}, function (err, result) {
         if (err) return response.status(400).send();
         if (result.password == credentials.password) {
-          response.send(true);
+          response.send(JSON.stringify(true));
         }
         else return response.status(401).send();
         client.close();
