@@ -110,8 +110,10 @@ app.post("/logon", jsonParser, function (request, response) {
         .db("blogdb")
         .collection("users")
         .findOne({ login: credentials.login }, function (err, result) {
+          console.log(result.password + " db");
+          console.log(credentials.password + " req");
           if (err) return response.status(400).send();
-          if (result.password == credentials.password) {
+          if (result.password === credentials.password) {
             response.send(JSON.stringify(credentials));
           } else return response.status(401).send();
           client.close();
