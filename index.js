@@ -28,6 +28,23 @@ app.get("/main", function(req, res) {
   );
 });
 
+app.get("/articles/:id", function(request, response) {
+  const articleId = request.params["id"];
+  mongoClient.connect(
+    dbURI,
+    { useNewUrlParser: true },
+    function(err, client) {
+      client
+        .db("blogdb")
+        .collection("articles")
+        .findOne({ _id: id }, function(err, data) {
+          response.send(data);
+          client.close();
+        });
+    }
+  );
+});
+
 app.get("/articles", function(request, response) {
   mongoClient.connect(
     dbURI,
