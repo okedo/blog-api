@@ -30,6 +30,7 @@ app.get("/main", function(req, res) {
 
 app.get("/articles/:id", function(request, response) {
   const articleId = request.params["id"];
+  console.log(articleId);
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
@@ -38,6 +39,7 @@ app.get("/articles/:id", function(request, response) {
         .db("blogdb")
         .collection("articles")
         .findOne({ _id: id }, function(err, data) {
+          console.log(data);
           response.send(data);
           client.close();
         });
