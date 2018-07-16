@@ -132,6 +132,7 @@ app.post("/logon", jsonParser, function(request, response) {
           console.log(credentials.password + " req");
           if (err) return response.status(400).send();
           if (result.password === credentials.password) {
+            credentials.id = result._id;
             response.send(JSON.stringify(credentials));
           } else return response.sendStatus(401);
           client.close();
