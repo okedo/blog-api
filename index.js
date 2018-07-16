@@ -96,7 +96,7 @@ app.post("/article/new", jsonParser, function(request, response) {
         .db("blogdb")
         .collection("articles")
         .insertOne(article, function(err, result) {
-          if (err) return response.status(400).send();
+          if (err) return response.sendStatus(500);
           console.log(article);
           response.send(JSON.stringify(article));
           client.close();
@@ -133,7 +133,7 @@ app.post("/logon", jsonParser, function(request, response) {
           if (err) return response.status(400).send();
           if (result.password === credentials.password) {
             credentials.id = result._id;
-            response.send(JSON.stringify(credentials));
+            response.status(201).send(JSON.stringify(credentials));
           } else return response.sendStatus(401);
           client.close();
         });
@@ -167,7 +167,7 @@ app.post("/register", jsonParser, function(request, response) {
         .findOne({ login: credentials.login }, function(err, result) {
           if (result) {
             console.log(result);
-            response.sendStatus(401);
+            response.sendStatus(409);
           } else {
             client
               .db("blogdb")
