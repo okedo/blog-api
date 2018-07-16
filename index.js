@@ -12,15 +12,21 @@ const dbURI = "mongodb://admin:Update01@ds125381.mlab.com:25381/blogdb";
 // const dbURI = "mongodb://okedo:Update01@blogdb-shard-00-00-jifjv.mongodb.net:27017";
 // const dbURI = "mongodb+srv://okedo:<Update01>@blogdb-jifjv.mongodb.net/blogDb";
 
-app.get("/main", function (req, res) {
+app.get("/main", function(req, res) {
   mongoClient.connect(
     dbURI,
-    function (err, client) {
+    function(err, client) {
+      if (err) {
+        res.sendStatus(500);
+      }
       client
         .db("blogdb")
         .collection("mainPage")
         .find({})
-        .toArray(function (err, mainPageData) {
+        .toArray(function(err, mainPageData) {
+          if (err) {
+            res.sendStatus(500);
+          }
           res.send(mainPageData[0]);
           client.close();
         });
@@ -28,17 +34,23 @@ app.get("/main", function (req, res) {
   );
 });
 
-app.get("/articles/:id", function (request, response) {
+app.get("/articles/:id", function(request, response) {
   const articleId = request.params["id"];
   console.log(articleId);
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
-    function (err, client) {
+    function(err, client) {
+      if (err) {
+        res.sendStatus(500);
+      }
       client
         .db("blogdb")
         .collection("articles")
-        .findOne({ _id: id }, function (err, data) {
+        .findOne({ _id: id }, function(err, data) {
+          if (err) {
+            res.sendStatus(500);
+          }
           console.log(data);
           response.send(data);
           client.close();
@@ -47,16 +59,19 @@ app.get("/articles/:id", function (request, response) {
   );
 });
 
-app.get("/articles", function (request, response) {
+app.get("/articles", function(request, response) {
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
-    function (err, client) {
+    function(err, client) {
+      if (err) {
+        res.sendStatus(500);
+      }
       client
         .db("blogdb")
         .collection("articles")
         .find({})
-        .toArray(function (err, data) {
+        .toArray(function(err, data) {
           response.send(data);
           client.close();
         });
@@ -64,7 +79,7 @@ app.get("/articles", function (request, response) {
   );
 });
 
-app.post("/article/new", jsonParser, function (request, response) {
+app.post("/article/new", jsonParser, function(request, response) {
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
@@ -76,11 +91,11 @@ app.post("/article/new", jsonParser, function (request, response) {
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
-    function (err, client) {
+    function(err, client) {
       client
         .db("blogdb")
         .collection("articles")
-        .insertOne(article, function (err, result) {
+        .insertOne(article, function(err, result) {
           if (err) return response.status(400).send();
           console.log(article);
           response.send(JSON.stringify(article));
@@ -90,7 +105,7 @@ app.post("/article/new", jsonParser, function (request, response) {
   );
 });
 
-app.post("/logon", jsonParser, function (request, response) {
+app.post("/logon", jsonParser, function(request, response) {
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
@@ -105,24 +120,27 @@ app.post("/logon", jsonParser, function (request, response) {
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
-    function (err, client) {
+    function(err, client) {
+      if (err) {
+        res.sendStatus(500);
+      }
       client
         .db("blogdb")
         .collection("users")
-        .findOne({ login: credentials.login }, function (err, result) {
+        .findOne({ login: credentials.login }, function(err, result) {
           console.log(result.password + " db");
           console.log(credentials.password + " req");
           if (err) return response.status(400).send();
           if (result.password === credentials.password) {
             response.send(JSON.stringify(credentials));
-          } else return response.status(401).send();
+          } else return response.sendStatus(401);
           client.close();
         });
     }
   );
 });
 
-app.post("/register", jsonParser, function (request, response) {
+app.post("/register", jsonParser, function(request, response) {
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
@@ -138,11 +156,14 @@ app.post("/register", jsonParser, function (request, response) {
   mongoClient.connect(
     dbURI,
     { useNewUrlParser: true },
-    function (err, client) {
+    function(err, client) {
+      if (err) {
+        res.sendStatus(500);
+      }
       client
         .db("blogdb")
         .collection("users")
-        .findOne({ "login": credentials.login }, function (err, result) {
+        .findOne({ login: credentials.login }, function(err, result) {
           if (result) {
             console.log(result);
             response.sendStatus(401);
@@ -150,7 +171,7 @@ app.post("/register", jsonParser, function (request, response) {
             client
               .db("blogdb")
               .collection("users")
-              .insertOne(credentials, function (err, result) {
+              .insertOne(credentials, function(err, result) {
                 response.send(JSON.parse(result));
               });
           }
@@ -160,6 +181,6 @@ app.post("/register", jsonParser, function (request, response) {
   );
 });
 
-app.listen(3000, function () {
+app.listen(3000, function() {
   console.log("Сервер ожидает подключения...");
 });
