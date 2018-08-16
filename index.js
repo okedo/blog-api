@@ -1,6 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
-
+const objectId = require("mongodb").ObjectID;
 const fs = require("fs");
 const jsonParser = bodyParser.json();
 
@@ -35,7 +35,7 @@ app.get("/main", function(req, res) {
 
 
 app.get("/articles/:id", function(request, response) {
-    const articleId = request.params["id"];
+    const articleId = new objectId(request.params["id"]);
     console.log(articleId);
     mongoClient.connect(
         dbURI,
