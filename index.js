@@ -118,10 +118,11 @@ app.post("/articles/new", jsonParser, function(request, response) {
 });
 
 app.post("/articles/remove/", jsonParser, function(request, response) {
+  console.log(request.body);
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
-  } else if (!request.body.title && !request.body.text) {
+  } else if (!request.body.id) {
     return response.sendStatus(400);
   }
   const articleId = new objectId(request.body.id);
