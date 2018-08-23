@@ -75,7 +75,8 @@ app.get("/articles", function(request, response) {
           {
             _id: 1,
             title: 1,
-            text: 1
+            text: 1,
+            userId: 1
           }
         )
         .toArray(function(err, data) {
@@ -91,10 +92,17 @@ app.post("/articles/new", jsonParser, function(request, response) {
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
-  } else if (!request.body.title && !request.body.text) {
+  } else if (
+    !request.body.userId ||
+    (!request.body.title && !request.body.text)
+  ) {
     return response.sendStatus(400);
   }
-  const article = { title: request.body.title, text: request.body.text };
+  const article = {
+    userId: request.body.userId,
+    title: request.body.title,
+    text: request.body.text
+  };
 
   mongoClient.connect(
     dbURI,
@@ -188,8 +196,11 @@ app.post("/logon", jsonParser, function(request, response) {
           console.log(credentials.password + " req");
           if (err) return response.status(400).send();
           if (result.password === credentials.password) {
-            credentials.id = result._id;
-            response.send(JSON.stringify(credentials));
+            const responseData = {
+              id: result._id,
+              login: result.login
+            };
+            response.send(JSON.stringify(responseData));
           } else return response.status(401).send();
           client.close();
         });
