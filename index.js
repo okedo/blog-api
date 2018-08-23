@@ -138,7 +138,7 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
       client
         .db("blogdb")
         .collection("articles")
-        .remove({ _id: articleId });
+        .remove({ _id: articleId }, true);
 
       client
         .db("blogdb")
