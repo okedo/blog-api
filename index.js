@@ -52,7 +52,7 @@ app.get("/main", function(req, res) {
 });
 
 app.get("/articles/:id", function(request, response) {
-  const articleId = "";
+  let articleId = "";
   try {
     articleId = new objectId(request.params["id"]);
   } catch (error) {
