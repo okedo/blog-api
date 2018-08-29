@@ -69,13 +69,17 @@ app.get("/articles/:id", function(request, response) {
       client
         .db("blogdb")
         .collection("articles")
-        .findOne({ _id: articleId }, function(err, data) {
-          if (err) {
-            logErr(err);
+        .findOne(
+          { _id: articleId },
+          { userId: 1, title: 1, text: 1, description: 1, _id: 1 },
+          function(err, data) {
+            if (err) {
+              logErr(err);
+            }
+            response.send(data);
+            client.close();
           }
-          response.send(data);
-          client.close();
-        });
+        );
     }
   );
 });
@@ -110,9 +114,63 @@ app.get("/articles", function(request, response) {
   );
 });
 
+app.post("/articles/update", jsonParser, function(request, response) {
+  if (!request.body) {
+    logError("empty request body");
+    return response.sendStatus(400);
+  } else if (
+    !request.body._id ||
+    !request.body.userId ||
+    !request.body.title ||
+    !request.body.text ||
+    !request.body.description
+  ) {
+    logError("wrong request");
+    return response.sendStatus(400);
+  }
+  const articleId = new objectId(request.body._id);
+  const article = {
+    title: request.body.title,
+    text: request.body.text,
+    description: request.body.description
+  };
+
+  mongoClient.connect(
+    dbURI,
+    { useNewUrlParser: true },
+    function(err, client) {
+      if (err) {
+        logErr(err);
+        return;
+      }
+      client
+        .db("blogdb")
+        .collection("articles")
+        .findOneAndUpdate(
+          { _id: articleId },
+          {
+            $set: {
+              title: article.title,
+              text: article.text,
+              description: article.description
+            }
+          },
+          function(err, result) {
+            if (err) {
+              logErr(err);
+              return response.status(400).send();
+            }
+            response.send(JSON.stringify(result.value._id));
+            client.close();
+          }
+        );
+    }
+  );
+});
+
 app.post("/articles/new", jsonParser, function(request, response) {
   if (!request.body) {
-    logError("empty request body")
+    logError("empty request body");
     return response.sendStatus(400);
   } else if (
     !request.body.userId ||
@@ -120,6 +178,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
     !request.body.text ||
     !request.body.description
   ) {
+    logError("wrong request");
     return response.sendStatus(400);
   }
   const article = {
@@ -137,6 +196,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
         logErr(err);
         return;
       }
+
       client
         .db("blogdb")
         .collection("articles")
@@ -154,7 +214,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
 
 app.post("/articles/remove/", jsonParser, function(request, response) {
   if (!request.body) {
-    logError("empty request body")
+    logError("empty request body");
     return response.sendStatus(400);
   } else if (!request.body.id) {
     return response.sendStatus(400);
@@ -195,7 +255,7 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
 
 app.post("/logon", jsonParser, function(request, response) {
   if (!request.body) {
-    logError("empty request body")
+    logError("empty request body");
     return response.sendStatus(400);
   } else if (!request.body.login && !request.body.password) {
     return response.sendStatus(400);
@@ -237,7 +297,7 @@ app.post("/logon", jsonParser, function(request, response) {
 
 app.post("/register", jsonParser, function(request, response) {
   if (!request.body) {
-    logError("empty request body")
+    logError("empty request body");
     return response.sendStatus(400);
   } else if (!request.body.login && !request.body.password) {
     return response.sendStatus(400);
