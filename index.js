@@ -76,6 +76,7 @@ app.get("/articles", function(request, response) {
             _id: 1,
             title: 1,
             text: 1,
+            description: 1,
             userId: 1
           }
         )
@@ -94,14 +95,17 @@ app.post("/articles/new", jsonParser, function(request, response) {
     return response.sendStatus(400);
   } else if (
     !request.body.userId ||
-    (!request.body.title && !request.body.text)
+    !request.body.title ||
+    !request.body.text ||
+    !request.body.description
   ) {
     return response.sendStatus(400);
   }
   const article = {
     userId: request.body.userId,
     title: request.body.title,
-    text: request.body.text
+    text: request.body.text,
+    description: request.body.description
   };
 
   mongoClient.connect(
@@ -116,9 +120,11 @@ app.post("/articles/new", jsonParser, function(request, response) {
         .db("blogdb")
         .collection("articles")
         .insertOne(article, function(err, result) {
-          if (err) return response.status(400).send();
-          console.log(article);
-          response.send(JSON.stringify(article));
+          if (err) {
+            console.log(err);
+            return response.status(400).send();
+          }
+          response.send(JSON.stringify(result.ops[0]._id));
           client.close();
         });
     }
@@ -126,7 +132,6 @@ app.post("/articles/new", jsonParser, function(request, response) {
 });
 
 app.post("/articles/remove/", jsonParser, function(request, response) {
-  console.log(request.body);
   if (!request.body) {
     console.log("error");
     return response.sendStatus(400);
@@ -160,7 +165,6 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
           }
         )
         .toArray(function(err, data) {
-          // console.log(data);
           response.send(data);
           client.close();
         });
@@ -192,8 +196,6 @@ app.post("/logon", jsonParser, function(request, response) {
         .db("blogdb")
         .collection("users")
         .findOne({ login: credentials.login }, function(err, result) {
-          console.log(result.password + " db");
-          console.log(credentials.password + " req");
           if (err) return response.status(400).send();
           if (result.password === credentials.password) {
             const responseData = {
@@ -234,7 +236,6 @@ app.post("/register", jsonParser, function(request, response) {
         .collection("users")
         .findOne({ login: credentials.login }, function(err, result) {
           if (result) {
-            console.log(result);
             response.sendStatus(401);
           } else {
             client
