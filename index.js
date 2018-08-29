@@ -13,12 +13,30 @@ const dbURI = "mongodb://admin:Update01@ds125381.mlab.com:25381/blogdb";
 // const dbURI = "mongodb://okedo:Update01@blogdb-shard-00-00-jifjv.mongodb.net:27017";
 // const dbURI = "mongodb+srv://okedo:<Update01>@blogdb-jifjv.mongodb.net/blogDb";
 
+function logError(error) {
+  const errorData = {
+    errorInfo: error instanceof Error ? error.toString() : error,
+    date: new Date()
+  };
+  mongoClient.connect(
+    dbURI,
+    { useNewUrlParser: true },
+    function(err, client) {
+      client
+        .db("blogdb")
+        .collection("errors")
+        .insertOne(errorData);
+      client.close();
+    }
+  );
+}
+
 app.get("/main", function(req, res) {
   mongoClient.connect(
     dbURI,
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -34,13 +52,18 @@ app.get("/main", function(req, res) {
 });
 
 app.get("/articles/:id", function(request, response) {
-  const articleId = new objectId(request.params["id"]);
-  console.log(articleId);
+  const articleId = "";
+  try {
+    articleId = new objectId(request.params["id"]);
+  } catch (error) {
+    logError(error);
+    return response.status(500).send();
+  }
   mongoClient.connect(
     dbURI,
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -48,9 +71,8 @@ app.get("/articles/:id", function(request, response) {
         .collection("articles")
         .findOne({ _id: articleId }, function(err, data) {
           if (err) {
-            console.log(err);
+            logErr(err);
           }
-          console.log(data);
           response.send(data);
           client.close();
         });
@@ -64,7 +86,7 @@ app.get("/articles", function(request, response) {
     { useNewUrlParser: true },
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -81,7 +103,6 @@ app.get("/articles", function(request, response) {
           }
         )
         .toArray(function(err, data) {
-          // console.log(data);
           response.send(data);
           client.close();
         });
@@ -113,7 +134,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
     { useNewUrlParser: true },
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -121,7 +142,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
         .collection("articles")
         .insertOne(article, function(err, result) {
           if (err) {
-            console.log(err);
+            logErr(err);
             return response.status(400).send();
           }
           response.send(JSON.stringify(result.ops[0]._id));
@@ -145,7 +166,7 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
     { useNewUrlParser: true },
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -189,7 +210,7 @@ app.post("/logon", jsonParser, function(request, response) {
     { useNewUrlParser: true },
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
@@ -197,6 +218,10 @@ app.post("/logon", jsonParser, function(request, response) {
         .collection("users")
         .findOne({ login: credentials.login }, function(err, result) {
           if (err) return response.status(400).send();
+          if (!result) {
+            logError("user not found");
+            return response.status(403).send();
+          }
           if (result.password === credentials.password) {
             const responseData = {
               id: result._id,
@@ -215,7 +240,6 @@ app.post("/register", jsonParser, function(request, response) {
     console.log("error");
     return response.sendStatus(400);
   } else if (!request.body.login && !request.body.password) {
-    console.log(request.body);
     return response.sendStatus(400);
   }
   const credentials = {
@@ -228,7 +252,7 @@ app.post("/register", jsonParser, function(request, response) {
     { useNewUrlParser: true },
     function(err, client) {
       if (err) {
-        console.log(err);
+        logErr(err);
         return;
       }
       client
