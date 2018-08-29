@@ -112,7 +112,7 @@ app.get("/articles", function(request, response) {
 
 app.post("/articles/new", jsonParser, function(request, response) {
   if (!request.body) {
-    console.log("error");
+    logError("empty request body")
     return response.sendStatus(400);
   } else if (
     !request.body.userId ||
@@ -154,7 +154,7 @@ app.post("/articles/new", jsonParser, function(request, response) {
 
 app.post("/articles/remove/", jsonParser, function(request, response) {
   if (!request.body) {
-    console.log("error");
+    logError("empty request body")
     return response.sendStatus(400);
   } else if (!request.body.id) {
     return response.sendStatus(400);
@@ -195,7 +195,7 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
 
 app.post("/logon", jsonParser, function(request, response) {
   if (!request.body) {
-    console.log("error");
+    logError("empty request body")
     return response.sendStatus(400);
   } else if (!request.body.login && !request.body.password) {
     return response.sendStatus(400);
@@ -237,7 +237,7 @@ app.post("/logon", jsonParser, function(request, response) {
 
 app.post("/register", jsonParser, function(request, response) {
   if (!request.body) {
-    console.log("error");
+    logError("empty request body")
     return response.sendStatus(400);
   } else if (!request.body.login && !request.body.password) {
     return response.sendStatus(400);
