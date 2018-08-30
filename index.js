@@ -31,6 +31,16 @@ function logError(error) {
   );
 }
 
+function generateToken(n) {
+  const chars =
+    "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let token = "";
+  for (let i = 0; i < n; i++) {
+    token += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return token;
+}
+
 app.get("/main", function(req, res) {
   mongoClient.connect(
     dbURI,
@@ -276,21 +286,27 @@ app.post("/logon", jsonParser, function(request, response) {
       client
         .db("blogdb")
         .collection("users")
-        .findOne({ login: credentials.login }, function(err, result) {
-          if (err) return response.status(400).send();
-          if (!result) {
-            logError("user not found");
-            return response.status(403).send();
-          }
-          if (result.password === credentials.password) {
-            const responseData = {
-              id: result._id,
-              login: result.login
+        .findOneAndUpdate(
+          { login: credentials.login, password: credentials.password },
+          { $set: { userToken: generateToken(12) } },
+          {
+            projection: { userToken: 1, userId: 1, login: 1 },
+            returnOriginal: false
+          },
+          function(err, result) {
+            if (err) {
+              logError(err);
+              return response.status(403).send();
+            }
+            const userData = {
+              id: result.value._id,
+              login: result.value.login,
+              userToken: result.value.userToken
             };
-            response.send(JSON.stringify(responseData));
-          } else return response.status(401).send();
-          client.close();
-        });
+            response.send(JSON.stringify(userData));
+            client.close();
+          }
+        );
     }
   );
 });
