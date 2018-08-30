@@ -263,6 +263,50 @@ app.post("/articles/remove/", jsonParser, function(request, response) {
   );
 });
 
+app.post("/refresh", jsonParser, function(request, response) {
+  if (!request.body) {
+    logError("empty request body");
+    return response.sendStatus(400);
+  } else if (!request.body.userToken) {
+    logError("POST /refresh - invalid user token");
+    return response.sendStatus(400);
+  }
+  mongoClient.connect(
+    dbURI,
+    { useNewUrlParser: true },
+    function(err, client) {
+      if (err) {
+        logErr(err);
+        return;
+      }
+      client
+        .db("blogdb")
+        .collection("users")
+        .findOneAndUpdate(
+          { userToken: request.body.userToken },
+          { $set: { userToken: generateToken(12) } },
+          {
+            projection: { userToken: 1, userId: 1, login: 1 },
+            returnOriginal: false
+          },
+          function(err, result) {
+            if (err) {
+              logError(err);
+              return response.status(403).send();
+            }
+            const userData = {
+              id: result.value._id,
+              login: result.value.login,
+              userToken: result.value.userToken
+            };
+            response.send(JSON.stringify(userData));
+            client.close();
+          }
+        );
+    }
+  );
+});
+
 app.post("/logon", jsonParser, function(request, response) {
   if (!request.body) {
     logError("empty request body");
